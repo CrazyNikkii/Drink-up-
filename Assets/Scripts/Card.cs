@@ -13,6 +13,15 @@ public class Card
 
     public override string ToString()
     {
-        return $"{value} of {suit}";
+        string cardValue = value switch
+        {
+            1 => "Ace",
+            11 => "Jack",
+            12 => "Queen",
+            13 => "King",
+            _ => value.ToString() // For numbers 2-10, just show the number
+        };
+
+        return $"{cardValue} of {suit}";
     }
 }

@@ -45,6 +45,8 @@ public class NetworkDeck : NetworkBehaviour
         Card drawnCard = deck[0];
         deck.RemoveAt(0);
 
+        Debug.Log($"Player {playerID} drew: {drawnCard}");
+
         GiveCardToPlayerClientRpc(playerID, drawnCard.value, drawnCard.suit);
     }
 
