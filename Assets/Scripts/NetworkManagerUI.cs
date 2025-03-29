@@ -11,16 +11,13 @@ public class NetworkManagerUI : MonoBehaviour
 
     void Start()
     {
-        // Attach button events
         startHostButton.onClick.AddListener(StartHost);
         startServerButton.onClick.AddListener(StartServer);
         startClientButton.onClick.AddListener(StartClient);
 
-        // Register the OnClientConnectedCallback event to log when a player connects
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
     }
 
-    // Start Host (Server + Client on the same instance)
     void StartHost()
     {
         Debug.Log("Start Host Button Pressed");
@@ -34,7 +31,6 @@ public class NetworkManagerUI : MonoBehaviour
         }
     }
 
-    // Start Server only
     void StartServer()
     {
         Debug.Log("Start Server Button Pressed");
@@ -59,7 +55,6 @@ public class NetworkManagerUI : MonoBehaviour
         NetworkManager.Singleton.StartClient();
     }
 
-    // Event handler for when a client successfully connects to the server
     private void OnClientConnected(ulong clientId)
     {
         Debug.Log($"Player with Client ID {clientId} connected successfully.");

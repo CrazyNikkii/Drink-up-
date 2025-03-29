@@ -2,7 +2,7 @@ using System;
 
 public class Card
 {
-    public int value; // 1 = Ace, 11 = Jack, 12 = Queen, 13 = King
+    public int value;
     public string suit;
 
     public Card(int value, string suit)

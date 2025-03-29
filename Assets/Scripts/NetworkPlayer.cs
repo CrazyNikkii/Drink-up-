@@ -15,7 +15,6 @@ public class NetworkPlayer : NetworkBehaviour
 
     private void Update()
     {
-        // Only let the owner of the player object do this
         if (IsOwner && Input.GetKeyDown(KeyCode.Space))
         {
             if (networkDeck != null)
