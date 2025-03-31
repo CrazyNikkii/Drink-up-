@@ -53,15 +53,13 @@ public class NetworkDeck : NetworkBehaviour
     [ClientRpc]
     void SpawnCardForClientRpc(ulong playerID, int value, string suit)
     {
-        if (NetworkManager.Singleton.LocalClientId == playerID)
+        // Spawn the card for every client, not just the local client
+        GameObject newCardObj = Instantiate(cardPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+        CardDisplay cardDisplay = newCardObj.GetComponent<CardDisplay>();
+        if (cardDisplay != null)
         {
-            GameObject newCardObj = Instantiate(cardPrefab, new Vector3(0, 0, 0), Quaternion.identity);
-            CardDisplay cardDisplay = newCardObj.GetComponent<CardDisplay>();
-            if (cardDisplay != null)
-            {
-                cardDisplay.SetCard(value, suit);
-            }
-            Debug.Log($"Player {playerID} received card: {value} of {suit}");
+            cardDisplay.SetCard(value, suit);
         }
+        Debug.Log($"Player {playerID} received card: {value} of {suit}");
     }
 }
