@@ -1,7 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
-using Unity.Netcode.Transports.UTP;
+using UnityEngine.SceneManagement;
 
 public class NetworkManagerUI : MonoBehaviour
 {
@@ -9,11 +9,14 @@ public class NetworkManagerUI : MonoBehaviour
     public Button startServerButton;
     public Button startClientButton;
 
+    public Button startGameButton;
+
     void Start()
     {
         startHostButton.onClick.AddListener(StartHost);
         startServerButton.onClick.AddListener(StartServer);
         startClientButton.onClick.AddListener(StartClient);
+        startGameButton.onClick.AddListener(StartGame);
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
     }
@@ -24,6 +27,7 @@ public class NetworkManagerUI : MonoBehaviour
         if (NetworkManager.Singleton.StartHost())
         {
             Debug.Log("Host Started");
+            SceneManager.LoadScene("GameScene");
         }
         else
         {
@@ -53,10 +57,22 @@ public class NetworkManagerUI : MonoBehaviour
             return;
         }
         NetworkManager.Singleton.StartClient();
+        SceneManager.LoadScene("GameScene");
     }
 
     private void OnClientConnected(ulong clientId)
     {
         Debug.Log($"Player with Client ID {clientId} connected successfully.");
+
+        if (NetworkManager.Singleton.IsHost)
+        {
+            startGameButton.gameObject.SetActive(true);
+        }
+
+    }
+
+    private void StartGame()
+    {
+        GameManager.Instance.InitializeGame();
     }
 }

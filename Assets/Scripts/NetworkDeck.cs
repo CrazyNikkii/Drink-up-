@@ -8,6 +8,8 @@ public class NetworkDeck : NetworkBehaviour
     private List<Card> deck = new List<Card>();
     private readonly string[] suits = { "hearts", "diamonds", "clubs", "spades" };
 
+    private Card lastDrawnCard; // Field to store the last drawn card
+
     public override void OnNetworkSpawn()
     {
         if (IsServer) InitializeDeck();
@@ -42,12 +44,13 @@ public class NetworkDeck : NetworkBehaviour
     {
         if (deck.Count == 0) return;
 
-        Card drawnCard = deck[0];
+        // Draw the card from the deck
+        lastDrawnCard = deck[0]; // Update the last drawn card
         deck.RemoveAt(0);
 
-        Debug.Log($"Player {playerID} drew: {drawnCard}");
+        Debug.Log($"Player {playerID} drew: {lastDrawnCard}");
 
-        SpawnCardForClientRpc(playerID, drawnCard.value, drawnCard.suit);
+        SpawnCardForClientRpc(playerID, lastDrawnCard.value, lastDrawnCard.suit);
     }
 
     [ClientRpc]
@@ -61,5 +64,11 @@ public class NetworkDeck : NetworkBehaviour
             cardDisplay.SetCard(value, suit);
         }
         Debug.Log($"Player {playerID} received card: {value} of {suit}");
+    }
+
+    // Get the last drawn card
+    public Card GetLastCard()
+    {
+        return lastDrawnCard;
     }
 }
