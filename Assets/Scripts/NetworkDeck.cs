@@ -4,14 +4,15 @@ using UnityEngine;
 
 public class NetworkDeck : NetworkBehaviour
 {
-    public GameObject cardPrefab; // Assign CardPrefab in Inspector
+    public GameObject cardPrefab;
     private List<Card> deck = new List<Card>();
     private readonly string[] suits = { "hearts", "diamonds", "clubs", "spades" };
 
-    private Card lastDrawnCard; // Field to store the last drawn card
+    private Card lastDrawnCard;
 
     public override void OnNetworkSpawn()
     {
+        Debug.Log("NetworkDeck Spawned on the server");
         if (IsServer) InitializeDeck();
     }
 
@@ -42,21 +43,32 @@ public class NetworkDeck : NetworkBehaviour
     [ServerRpc]
     public void DrawCardServerRpc(ulong playerID)
     {
-        if (deck.Count == 0) return;
+        if (IsServer) // This should execute only on the server.
+        {
+            if (deck.Count == 0)
+            {
+                Debug.LogError("Deck is empty!");
+                return;
+            }
 
-        // Draw the card from the deck
-        lastDrawnCard = deck[0]; // Update the last drawn card
-        deck.RemoveAt(0);
+            lastDrawnCard = deck[0]; // Draw the card
+            deck.RemoveAt(0);
 
-        Debug.Log($"Player {playerID} drew: {lastDrawnCard}");
+            Debug.Log($"Player {playerID} drew: {lastDrawnCard}");
 
-        SpawnCardForClientRpc(playerID, lastDrawnCard.value, lastDrawnCard.suit);
+            // Spawn the card for the client
+            SpawnCardForClientRpc(playerID, lastDrawnCard.value, lastDrawnCard.suit);
+        }
+        else
+        {
+            Debug.LogWarning("DrawCardServerRpc was called by a client instead of the server.");
+        }
     }
+
 
     [ClientRpc]
     void SpawnCardForClientRpc(ulong playerID, int value, string suit)
     {
-        // Spawn the card for every client, not just the local client
         GameObject newCardObj = Instantiate(cardPrefab, new Vector3(0, 0, 0), Quaternion.identity);
         CardDisplay cardDisplay = newCardObj.GetComponent<CardDisplay>();
         if (cardDisplay != null)
@@ -66,7 +78,6 @@ public class NetworkDeck : NetworkBehaviour
         Debug.Log($"Player {playerID} received card: {value} of {suit}");
     }
 
-    // Get the last drawn card
     public Card GetLastCard()
     {
         return lastDrawnCard;

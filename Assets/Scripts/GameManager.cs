@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.Netcode;
@@ -27,7 +28,7 @@ public class GameManager : NetworkBehaviour
     private int[] playerScores;
 
     private Card lastCard;
-    private NetworkDeck networkDeck;
+    public NetworkDeck networkDeck;
     private int cardCount = 0;
 
     void Awake()
@@ -46,6 +47,7 @@ public class GameManager : NetworkBehaviour
 
     void Start()
     {
+
         if (NetworkManager.Singleton.IsHost)
         {
             int totalPlayers = NetworkManager.Singleton.ConnectedClients.Count + 1;
@@ -59,6 +61,7 @@ public class GameManager : NetworkBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        networkDeck = FindAnyObjectByType<NetworkDeck>();
         scoreText = GameObject.Find("ScoreText")?.GetComponent<TextMeshProUGUI>();
         questionText = GameObject.Find("QuestionText")?.GetComponent<TextMeshProUGUI>();
 
@@ -324,10 +327,42 @@ public class GameManager : NetworkBehaviour
 
     void DealCard()
     {
-        Debug.Log("Draw a card for player;" + playerIDs[currentPlayerIndex]);
-        networkDeck.DrawCardServerRpc(playerIDs[currentPlayerIndex]);
+        if (networkDeck == null)
+        {
+            networkDeck = FindAnyObjectByType<NetworkDeck>();
+            if (networkDeck == null)
+            {
+                Debug.LogError("NetworkDeck is still null in DealCard!");
+                return;
+            }
+        }
 
+        NetworkPlayer localPlayer = FindAnyObjectByType<NetworkPlayer>();
+        if (localPlayer != null)
+        {
+            localPlayer.RequestCardServerRpc(NetworkManager.Singleton.LocalClientId);
+        }
+        else
+        {
+            Debug.LogError("No local player instance found!");
+        }
+
+        StartCoroutine(WaitForLastCard());
+    }
+
+    IEnumerator WaitForLastCard()
+    {
+        yield return new WaitForSeconds(1f);
         lastCard = networkDeck.GetLastCard();
+
+        if (lastCard == null)
+        {
+            Debug.LogError("Last drawn card is still null!");
+        }
+        else
+        {
+            Debug.Log($"Last drawn card: {lastCard.value} of {lastCard.suit}");
+        }
     }
 
     public void RestartGame()

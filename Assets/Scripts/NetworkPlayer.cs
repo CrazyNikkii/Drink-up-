@@ -7,6 +7,7 @@ public class NetworkPlayer : NetworkBehaviour
 
     private void Start()
     {
+        Debug.Log($"NetworkPlayer started. IsServer: {IsServer}, IsClient: {IsClient}, IsOwner: {IsOwner}");
         if (networkDeck == null)
         {
             networkDeck = Object.FindFirstObjectByType<NetworkDeck>();
@@ -15,12 +16,15 @@ public class NetworkPlayer : NetworkBehaviour
 
     private void Update()
     {
-        if (IsOwner && Input.GetKeyDown(KeyCode.Space)) // Check if spacebar is pressed
+        // Only handle the Spacebar press if it's the owner (the client) and the server is ready
+        if (IsOwner && !IsServer && Input.GetKeyDown(KeyCode.Space)) // Check that this is the client and not server
         {
             Debug.Log("Spacebar pressed, sending request for card...");
+
             if (networkDeck != null)
             {
-                RequestCardServerRpc(NetworkManager.Singleton.LocalClientId); // Send request for card
+                Debug.Log("NetworkDeck is valid, calling DrawCardServerRpc...");
+                RequestCardServerRpc(NetworkManager.Singleton.LocalClientId); // Make sure it's the server handling this
             }
             else
             {
@@ -29,11 +33,27 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
-    [ServerRpc]
-    void RequestCardServerRpc(ulong playerID)
+
+    public override void OnNetworkSpawn()
     {
-        // Server logic to draw a card
-        Debug.Log($"Server processing card draw request for player {playerID}");
+        Debug.Log($"NetworkPlayer started. IsServer: {IsServer}, IsClient: {IsClient}, IsOwner: {IsOwner}");
+        Debug.Log("NetworkPlayer Spawned on the server");
+        DontDestroyOnLoad(gameObject);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestCardServerRpc(ulong playerID)
+    {
+        Debug.Log($"RequestCardServerRpc CALLED for player {playerID}");
+
+        if (networkDeck == null)
+        {
+            Debug.LogError("networkDeck is NULL on server! Request ignored.");
+            return;
+        }
+
+        Debug.Log("NetworkDeck is valid, calling DrawCardServerRpc...");
+        Debug.Log($"IsServer: {IsServer}, IsClient: {IsClient}, IsHost: {NetworkManager.Singleton.IsHost}");
         networkDeck.DrawCardServerRpc(playerID);
     }
 }
