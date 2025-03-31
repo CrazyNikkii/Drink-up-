@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class NetworkDeck : NetworkBehaviour
 {
+    public GameObject cardPrefab; // Assign CardPrefab in Inspector
     private List<Card> deck = new List<Card>();
-    private readonly string[] suits = { "Hearts", "Diamonds", "Clubs", "Spades" };
+    private readonly string[] suits = { "hearts", "diamonds", "clubs", "spades" };
 
     public override void OnNetworkSpawn()
     {
@@ -36,7 +37,6 @@ public class NetworkDeck : NetworkBehaviour
         }
     }
 
-
     [ServerRpc]
     public void DrawCardServerRpc(ulong playerID)
     {
@@ -47,16 +47,21 @@ public class NetworkDeck : NetworkBehaviour
 
         Debug.Log($"Player {playerID} drew: {drawnCard}");
 
-        GiveCardToPlayerClientRpc(playerID, drawnCard.value, drawnCard.suit);
+        SpawnCardForClientRpc(playerID, drawnCard.value, drawnCard.suit);
     }
 
     [ClientRpc]
-    void GiveCardToPlayerClientRpc(ulong playerID, int value, string suit)
+    void SpawnCardForClientRpc(ulong playerID, int value, string suit)
     {
         if (NetworkManager.Singleton.LocalClientId == playerID)
         {
-            Card receivedCard = new Card(value, suit);
-            Debug.Log($"Player {playerID} received card: {receivedCard}");
+            GameObject newCardObj = Instantiate(cardPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+            CardDisplay cardDisplay = newCardObj.GetComponent<CardDisplay>();
+            if (cardDisplay != null)
+            {
+                cardDisplay.SetCard(value, suit);
+            }
+            Debug.Log($"Player {playerID} received card: {value} of {suit}");
         }
     }
 }
