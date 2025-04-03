@@ -50,12 +50,21 @@ public class MultiplayerManager : NetworkBehaviour
 
     private void StartHost()
     {
-        NetworkManager.Singleton.StartHost();
-        RegisterPlayer(NetworkManager.Singleton.LocalClientId, playerName);
-        hostButton.gameObject.SetActive(false);
-        joinButton.gameObject.SetActive(false);
-        ipInput.gameObject.SetActive(false);
-        startGameButton.gameObject.SetActive(true);
+        var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
+        transport.SetConnectionData("0.0.0.0", 7777);
+
+        if (NetworkManager.Singleton.StartHost())
+        {
+            RegisterPlayer(NetworkManager.Singleton.LocalClientId, playerName);
+            hostButton.gameObject.SetActive(false);
+            joinButton.gameObject.SetActive(false);
+            ipInput.gameObject.SetActive(false);
+            startGameButton.gameObject.SetActive(true);
+        }
+        else
+        {
+            Debug.LogError("Failed to start host.");
+        }
     }
 
     private void StartClient()
@@ -79,6 +88,7 @@ public class MultiplayerManager : NetworkBehaviour
 
     private void OnClientConnected(ulong clientId)
     {
+        Debug.Log($"Client {clientId} connected.");
         if (IsServer)
         {
             RequestUsernameClientRpc(clientId);
@@ -116,7 +126,7 @@ public class MultiplayerManager : NetworkBehaviour
     {
         if (IsServer)
         {
-            FindFirstObjectByType<GameModeManager>().StartGame();
+            StartGameClientRpc();
             startGameButton.gameObject.SetActive(false);
         }
     }
@@ -170,4 +180,15 @@ public class MultiplayerManager : NetworkBehaviour
         }
         UpdatePlayerList();
     }
+
+    [ClientRpc]
+    private void StartGameClientRpc()
+    {
+        GameModeManager gameModeManager = FindAnyObjectByType<GameModeManager>();
+        if (gameModeManager != null)
+        {
+            gameModeManager.StartGame();
+        }
+    }
+
 }

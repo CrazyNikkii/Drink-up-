@@ -8,8 +8,6 @@ public class CardDisplay : MonoBehaviour
     public Texture2D backTexture;
     public List<Texture2D> cardTextures = new List<Texture2D>();
 
-  //  private bool isFaceUp = false;
-
     void Start()
     {
         if (backRenderer != null && backTexture != null)
@@ -18,7 +16,7 @@ public class CardDisplay : MonoBehaviour
         }
     }
 
-    public void SetCard(int value, string suit)
+    public void SetCard(int value, string suit, ulong playerId)
     {
         string cardName = $"{value}_of_{suit}";
 
@@ -27,17 +25,14 @@ public class CardDisplay : MonoBehaviour
             if (texture.name == cardName)
             {
                 frontRenderer.material.mainTexture = texture;
+                frontRenderer.gameObject.SetActive(true);
+
+                transform.position = CardSpawnManager.Instance.GetSpawnPosition(playerId);
+
                 return;
             }
         }
 
         Debug.LogError($"Card texture not found: {cardName}");
     }
-
-   // public void FlipCard(bool faceUp)
-  //  {
-   //     isFaceUp = faceUp;
-  //      frontRenderer.gameObject.SetActive(faceUp);
-  //      backRenderer.gameObject.SetActive(!faceUp);
-  //  }
 }

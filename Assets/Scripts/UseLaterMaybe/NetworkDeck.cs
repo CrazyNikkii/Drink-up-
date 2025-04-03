@@ -73,7 +73,7 @@ public class NetworkDeck : NetworkBehaviour
         CardDisplay cardDisplay = newCardObj.GetComponent<CardDisplay>();
         if (cardDisplay != null)
         {
-            cardDisplay.SetCard(value, suit);
+           // cardDisplay.SetCard(value, suit);
         }
         Debug.Log($"Player {playerID} received card: {value} of {suit}");
     }
