@@ -15,7 +15,8 @@ public class MultiplayerManager : NetworkBehaviour
     public Button startGameButton;
     public TMP_Text playerListText;
 
-    private Dictionary<ulong, string> players = new Dictionary<ulong, string>();
+    private Dictionary<ulong, string> players = new Dictionary<ulong, string>(); // Map clientId to username
+    private Dictionary<ulong, string> playerUsernames = new Dictionary<ulong, string>(); // This holds the usernames directly
     private string playerName = "Player";
 
     private void Start()
@@ -40,6 +41,9 @@ public class MultiplayerManager : NetworkBehaviour
         {
             playerName = usernameInput.text;
         }
+
+        // Store the player's username by clientId
+        playerUsernames[NetworkManager.Singleton.LocalClientId] = playerName;
 
         hostButton.gameObject.SetActive(true);
         joinButton.gameObject.SetActive(true);
@@ -91,6 +95,7 @@ public class MultiplayerManager : NetworkBehaviour
         Debug.Log($"Client {clientId} connected.");
         if (IsServer)
         {
+            // Send the username to the server for registration
             RequestUsernameClientRpc(clientId);
         }
     }
@@ -118,7 +123,7 @@ public class MultiplayerManager : NetworkBehaviour
         playerListText.text = "Players:\n";
         foreach (KeyValuePair<ulong, string> player in players)
         {
-            playerListText.text += player.Value + " (ID: " + player.Key + ")\n";
+            playerListText.text += player.Value + " (ID: " + player.Key + ")\n"; // Displays username and clientId
         }
     }
 
@@ -163,7 +168,7 @@ public class MultiplayerManager : NetworkBehaviour
         foreach (KeyValuePair<ulong, string> player in players)
         {
             clientIds[index] = player.Key;
-            names[index] = new FixedString32Bytes(player.Value);
+            names[index] = new FixedString32Bytes(player.Value); // Store player username
             index++;
         }
 
@@ -176,7 +181,7 @@ public class MultiplayerManager : NetworkBehaviour
         players.Clear();
         for (int i = 0; i < clientIds.Length; i++)
         {
-            players[clientIds[i]] = names[i].ToString();
+            players[clientIds[i]] = names[i].ToString(); // Sync usernames for each player
         }
         UpdatePlayerList();
     }
@@ -190,5 +195,4 @@ public class MultiplayerManager : NetworkBehaviour
             gameModeManager.StartGame();
         }
     }
-
 }
