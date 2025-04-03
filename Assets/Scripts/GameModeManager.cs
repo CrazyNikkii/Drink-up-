@@ -40,6 +40,14 @@ public class GameModeManager : NetworkBehaviour
             playerScores[player.Key] = 0;
         }
 
+        Debug.Log("playerorder list count: " + playerOrder.Count);
+
+        if (playerOrder.Count == 0)
+        {
+            Debug.LogError("No players in the player order list.");
+            return;
+        }
+
         currentPlayerIndex = 0;
         StartTurn();
     }
@@ -52,14 +60,13 @@ public class GameModeManager : NetworkBehaviour
         }
 
         ulong currentPlayerId = playerOrder[currentPlayerIndex];
-        string currentPlayerUsername = multiplayerManager.GetPlayerName(currentPlayerId); // Get the username of the current player
-        string localPlayerUsername = multiplayerManager.GetPlayerName(NetworkManager.Singleton.LocalClientId); // Get the username of the local player
+        string currentPlayerUsername = multiplayerManager.GetPlayerName(currentPlayerId);
+        string localPlayerUsername = multiplayerManager.GetPlayerName(NetworkManager.Singleton.LocalClientId);
 
-        // Update prompt for the current player
         UpdateGamePromptClientRpc("Red or Black");
         UpdateButtonsForPlayerClientRpc(currentPlayerId);
 
-        if (currentPlayerUsername == localPlayerUsername) // Compare usernames, not IDs
+        if (currentPlayerUsername == localPlayerUsername)
         {
             redButton.onClick.RemoveAllListeners();
             blackButton.onClick.RemoveAllListeners();
@@ -68,8 +75,14 @@ public class GameModeManager : NetworkBehaviour
             blackButton.onClick.AddListener(() => OnColorSelected(false));
         }
 
-        // Now notify the next player of their turn
         NotifyNextPlayerTurnClientRpc(currentPlayerId);
+    }
+
+    [ClientRpc]
+    private void UpdateButtonsForPlayerClientRpc(ulong currentPlayerId)
+    {
+        Debug.Log($"[ClientRpc] Updating buttons for player {currentPlayerId}. LocalClientId: {NetworkManager.Singleton.LocalClientId}");
+        UpdateButtonsForPlayer(currentPlayerId);
     }
 
     private void UpdateButtonsForPlayer(ulong currentPlayerId)
@@ -83,20 +96,36 @@ public class GameModeManager : NetworkBehaviour
         {
             redButton.gameObject.SetActive(true);
             blackButton.gameObject.SetActive(true);
-            Debug.Log($"{localPlayerName} buttons are now visible.");
+
+            redButton.interactable = true;
+            blackButton.interactable = true;
+
+            Debug.Log($"{localPlayerName} buttons are now visible and interactable.");
         }
         else
         {
             redButton.gameObject.SetActive(false);
             blackButton.gameObject.SetActive(false);
-            Debug.Log($"{localPlayerName} buttons are hidden for other player.");
+
+            redButton.interactable = false;
+            blackButton.interactable = false;
+
+            Debug.Log($"{localPlayerName} buttons are hidden and not interactable for other player.");
         }
     }
 
 
     private void OnColorSelected(bool isRed)
     {
-        if (!IsServer) return;
+        Debug.Log($"Button pressed: {(isRed ? "Red" : "Black")}");
+
+        Debug.Log("Currentplayerindex: " + currentPlayerIndex+ " PlayerOrder list count: " + playerOrder.Count);
+
+        if (currentPlayerIndex >= playerOrder.Count)
+        {
+            Debug.LogError("Current player index is out of bounds.");
+            currentPlayerIndex = 0;
+        }
 
         ulong currentPlayerId = playerOrder[currentPlayerIndex];
 
@@ -106,7 +135,7 @@ public class GameModeManager : NetworkBehaviour
         Debug.Log($"Drawn card: {drawnCard}");
         Debug.Log($"Player guessed: {(isRed ? "Red" : "Black")}");
         Debug.Log($"Card is actually: {(cardIsRed ? "Red" : "Black")}");
- 
+
         redButton.gameObject.SetActive(false);
         blackButton.gameObject.SetActive(false);
 
@@ -138,13 +167,6 @@ public class GameModeManager : NetworkBehaviour
             scoreDisplay += $"{multiplayerManager.GetPlayerName(player.Key)}: {player.Value}\n";
         }
         UpdateScoresClientRpc(scoreDisplay);
-    }
-
-    [ClientRpc]
-    private void UpdateButtonsForPlayerClientRpc(ulong currentPlayerId)
-    {
-        Debug.Log($"[ClientRpc] Updating buttons for player {currentPlayerId}. LocalClientId: {NetworkManager.Singleton.LocalClientId}");
-        UpdateButtonsForPlayer(currentPlayerId);
     }
 
     [ClientRpc]
