@@ -15,8 +15,8 @@ public class MultiplayerManager : NetworkBehaviour
     public Button startGameButton;
     public TMP_Text playerListText;
 
-    private Dictionary<ulong, string> players = new Dictionary<ulong, string>(); // Map clientId to username
-    private Dictionary<ulong, string> playerUsernames = new Dictionary<ulong, string>(); // This holds the usernames directly
+    private Dictionary<ulong, string> players = new Dictionary<ulong, string>();
+    private Dictionary<ulong, string> playerUsernames = new Dictionary<ulong, string>();
     private string playerName = "Player";
 
     private void Start()
